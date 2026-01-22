@@ -1,7 +1,7 @@
 class Traitement :
-    def decoupe_en_pixel(self): #avec numpy
+    def decoupe_en_pixel(self, image): #avec numpy
         pass
-    def binarisation(self): #mettre la valeur des pixels
+    def binarisation(self, pixels): #mettre la valeur des pixels
         pass
     def histogramme(self): #entree : image binarisée, sortie : "list numpy"
         pass
@@ -16,7 +16,6 @@ class Reseau2Neurone :
         pass
     def backward(self):
         pass
-
 class Entrainement :
     pass
 
