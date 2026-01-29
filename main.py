@@ -1,22 +1,30 @@
 class Traitement :
-    def decoupe_en_pixel(self, image): #avec numpy
+    def __init__(self, image):
+        self.image = image
+        self.result = ""
+        self.list_image = None
+    def decoupe_en_pixel(self): #avec numpy MATHEO
         pass
-    def binarisation(self, pixels): #mettre la valeur des pixels
+    def binarisation(self, pixels): #mettre la valeur des pixels FAUSTINE
         pass
-    def histogramme(self): #entree : image binarisée, sortie : "list numpy"
+    def histogramme(self): #entree : image binarisée, sortie : "list numpy" ELANA
         pass
-    def selection_colonnes(self): #on sait pas encore comment on va faire
+    def selection_lignes(self): # MAXIME
         pass
-    def correction2pente(self): #inutile cest carré dans l'axe
+    def selection_colonnes(self): #on sait pas encore comment on va faire MAXIME
         pass
-    def correction_inclinaison(self): #inutile cest carré dans l'axe
+    def correction2pente(self): #inutile c'est carré dans l'axe PERSONNE
+        pass
+    def correction_inclinaison(self): #inutile c'est carré dans l'axe PERSONNE
         pass
 class Reseau2Neurone :
-    def forward(self):
+    def forward(self): #PIERRE
         pass
-    def backward(self):
+    def backward(self): #
         pass
 class Entrainement :
     pass
 
+
+#### CODE SOURCE ####
 
