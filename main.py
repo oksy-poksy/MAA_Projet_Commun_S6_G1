@@ -5,6 +5,8 @@ class Traitement :
         pass
     def histogramme(self): #entree : image binarisée, sortie : "list numpy"
         pass
+    def selection_ligne(self):
+        pass
     def selection_colonnes(self): #on sait pas encore comment on va faire
         pass
     def correction2pente(self): #inutile cest carré dans l'axe
