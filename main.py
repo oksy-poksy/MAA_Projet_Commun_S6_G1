@@ -9,7 +9,7 @@ class Traitement :
         pass
     def binarisation(self, pixels): #mettre la valeur des pixels FAUSTINE
         seuil = np.mean(pixels)
-        image_binaire = np.where(pixels > seuil, 255, 0)
+        image_binaire = np.where(pixels>seuil, 255, 0)
         return image_binaire
 
     def histogramme(self): #entree : image binarisée, sortie : "list numpy" ELANA
