@@ -1,3 +1,5 @@
+import numpy as np
+
 class Traitement :
     def __init__(self, image):
         self.image = image
@@ -6,7 +8,10 @@ class Traitement :
     def decoupe_en_pixel(self): #avec numpy MATHEO
         pass
     def binarisation(self, pixels): #mettre la valeur des pixels FAUSTINE
-        pass
+        seuil = np.mean(pixels)
+        image_binaire = np.where(pixels > seuil, 255, 0)
+        return image_binaire
+
     def histogramme(self): #entree : image binarisée, sortie : "list numpy" ELANA
         pass
     def selection_lignes(self): # MAXIME
