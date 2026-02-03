@@ -5,6 +5,8 @@ class Traitement :
         self.image = image
         self.result = ""
         self.list_image = None
+    def ouvrir_image(self): #FAUFAU
+        pass
     def decoupe_en_pixel(self): #avec numpy MATHEO
         pass
     def binarisation(self, pixels): #mettre la valeur des pixels FAUSTINE
@@ -25,11 +27,13 @@ class Traitement :
 class Reseau2Neurone :
     def forward(self): #PIERRE
         pass
-    def backward(self): #
+    def backward(self): # Oksana
         pass
 class Entrainement :
     pass
 
 
 #### CODE SOURCE ####
-
+image = ""
+Reseau = Reseau2Neurone
+file = Traitement(image)
