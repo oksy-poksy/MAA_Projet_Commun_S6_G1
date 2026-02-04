@@ -14,8 +14,10 @@ class Traitement :
         image_binaire = np.where(pixels>seuil, 255, 0)
         return image_binaire
 
-    def histogramme(self): #entree : image binarisée, sortie : "list numpy" ELANA
-        pass
+    def histogramme(self,image_binarisee): #entree : image binarisée, sortie : "list numpy" ELANA
+        image_numpy = np.where(image_binarisee >0, 1,0)
+        histogramme = np.sum(image_numpy, axis=1)
+        return histogramme
     def selection_lignes(self): # MAXIME
         pass
     def selection_colonnes(self): #on sait pas encore comment on va faire MAXIME
