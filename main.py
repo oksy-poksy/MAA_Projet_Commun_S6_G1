@@ -49,7 +49,7 @@ class Traitement :
             hauteur_moyenne = np.mean(hauteurs)
             nouvelles_lignes = {}
             i = 0
-            while i < len(lignes):
+            while i < len(lignes)-1:
                 if len(lignes[i]) < hauteur_moyenne * 0.25:
                     nouvelles_lignes[i] = lignes[i] + lignes[i + 1]
                     i += 1
