@@ -1,5 +1,7 @@
 import numpy as np
 from PIL import Image
+from ReadingEMNIST import *
+import pickle
 
 class Traitement :
     def __init__(self, image):
@@ -147,7 +149,176 @@ class Reseau2Neurone :
             self.reseau_poids[couche] -= self.taux_apprentissage * self.gradients[couche]
     
 class Entrainement :
-    pass
+    def entrainement_consecutif(self,nb_essais, nb_couche, neurones_couche, taux_apprentissage):
+        meilleur_modele = {}
+        # {"Reseau":None,"sommes":None,"activation":None,"meilleure_precision":None,
+        #  "evolution_perte_moyenne":None,"evolution_precision":None}
+        # on ne retiendra que ce qui est utilisé dans la forward (afin de prédire)
+        meilleure_precision = 0
+        reseau = Reseau2Neurone(nb_couche, neurones_couche, taux_apprentissage)
+        images = MnistDataloader()
+        (x_train, y_train), (x_test, y_test) = images.load_data()
+        nb_it = len(x_train)
+        cpt = 0
+        evolution_precision = np.array([])
+        evolution_perte_moyenne = np.array([])
+        rang = 0
+        total_loss = 0
+        for i in range(nb_it):
+            picture = np.array(x_train[i]) / 255.0
+            picture_a = picture.flatten()
+            reseau.forward(picture_a)
+            prediction = reseau.activation[reseau.nb_couche - 1]
+            pred = np.argmax(prediction)
+            perte = 0.5 * np.sum((prediction - [1 if j == y_train[i]-1 else 0 for j in range(26)]) ** 2)
+            total_loss += perte
+            result = np.argmax([1 if j == y_train[i]-1 else 0 for j in range(26)])
+            if pred == result:
+                cpt += 1
+            reseau.backward_propagation(y_train[i]-1)
+            rang += 1
+            evolution_precision = np.append(evolution_precision, cpt / rang)
+            evolution_perte_moyenne = np.append(evolution_perte_moyenne, total_loss / rang)
+        precision = cpt / nb_it
+        meilleur_modele["meilleure_precision"] = precision
+        meilleur_modele["Reseau"] = reseau.reseau_poids
+        meilleur_modele["evolution_precision"] = evolution_precision
+        meilleur_modele["evolution_perte_moyenne"] = evolution_perte_moyenne
+        meilleur_modele["sommes"] = reseau.sommes
+        meilleur_modele["activation"] = reseau.activation
+        meilleur_modele["erreurs"] = reseau.erreurs
+        # Visualisation
+        plt.figure(figsize=(15, 6))
+        # x = les étapes (1, 2, 3, ...)
+        x = range(1, len(evolution_precision) + 1)
+
+        # Scatter plot + ligne pour voir l'évolution
+        plt.plot(x, evolution_precision, linewidth=1, alpha=0.7, color='blue', label='Précision')
+        plt.plot(x, evolution_perte_moyenne, linewidth=2, alpha=0.7, color='black', label='Perte moyenne')
+        plt.scatter(x, evolution_precision, s=2, alpha=0.3, color='red')
+
+        plt.title(f"Résultat du 1er entrainement sur ({len(evolution_precision)} images)")
+        plt.xlabel("Image traitée")
+        plt.ylabel("Précision cumulée")
+        plt.ylim(0, 1)
+        plt.grid(True, alpha=0.3)
+        plt.legend()
+
+        # Ajouter la précision finale comme ligne horizontale
+        plt.axhline(y=precision, color='green', linestyle='--', alpha=0.5,
+                    label=f'Précision finale: {precision:.4f}')
+        plt.legend()
+        print("1ère simulation effectuée")
+        for j in range(2, nb_essais + 1):
+            images = MnistDataloader()
+            (x_train, y_train), (x_test, y_test) = images.load_data()
+            nb_it = len(x_train)
+            cpt = 0
+            evolution_precision = np.array([])
+            evolution_perte_moyenne = np.array([])
+            rang = 0
+            total_loss = 0
+            for i in range(nb_it):
+                picture = np.array(x_train[i]) / 255.0
+                picture_a = picture.reshape(len(x_train[i]), -1)
+                reseau.forward(picture_a)
+                prediction = reseau.activation[reseau.nb_couche - 1]
+                pred = np.argmax(prediction)
+                perte = 0.5 * np.sum((prediction - [1 if j == y_train[i]-1 else 0 for j in range(26)]) ** 2)
+                total_loss += perte
+                result = np.argmax([1 if j == y_train[i]-1 else 0 for j in range(26)])
+                if pred == result:
+                    cpt += 1
+                reseau.backward_propagation(y_train[i]-1)
+                rang += 1
+                evolution_precision = np.append(evolution_precision, cpt / rang)
+                evolution_perte_moyenne = np.append(evolution_perte_moyenne, total_loss / rang)
+            precision = cpt / nb_it
+            meilleur_modele["meilleure_precision"] = precision
+            meilleur_modele["Reseau"] = reseau.reseau_poids
+            meilleur_modele["evolution_precision"] = evolution_precision
+            meilleur_modele["evolution_perte_moyenne"] = evolution_perte_moyenne
+            meilleur_modele["sommes"] = reseau.sommes
+            meilleur_modele["activation"] = reseau.activation
+            meilleur_modele["erreurs"] = reseau.erreurs
+            # Visualisation
+            plt.figure(figsize=(15, 6))
+            # x = les étapes (1, 2, 3, ...)
+            x = range(1, len(evolution_precision) + 1)
+
+            # Scatter plot + ligne pour voir l'évolution
+            plt.plot(x, evolution_precision, linewidth=1, alpha=0.7, color='blue', label='Précision')
+            plt.plot(x, evolution_perte_moyenne, linewidth=2, alpha=0.7, color='black', label='Perte moyenne')
+            plt.scatter(x, evolution_precision, s=2, alpha=0.3, color='red')
+
+            plt.title(f"Résultat du {j}ème entrainement sur ({len(evolution_precision)} images)")
+            plt.xlabel("Image traitée")
+            plt.ylabel("Précision cumulée")
+            plt.ylim(0, 1)
+            plt.grid(True, alpha=0.3)
+            plt.legend()
+
+            # Ajouter la précision finale comme ligne horizontale
+            plt.axhline(y=precision, color='green', linestyle='--', alpha=0.5,
+                        label=f'Précision finale: {precision:.4f}')
+            plt.legend()
+            print(f"{j}eme simulation effectuée")
+            reseau.taux_apprentissage = reseau.taux_apprentissage / 2  # on diminue le taux d'apprentissage apr_s chaque itération
+        return meilleur_modele
+    def test(self, nb_couche, neurones_couche, taux_apprentissage,meilleur_modele):
+        # TEST
+        images = MnistDataloader()
+        (x_train, y_train), (x_test, y_test) = images.load_data()
+        nb_it = len(x_test)
+        cpt = 0
+        evolution_precision = np.array([])
+        evolution_perte_moyenne = np.array([])
+        rang = 0
+        total_loss = 0
+        reseau = Reseau2Neurone(nb_couche, neurones_couche, taux_apprentissage)
+        reseau.reseau_poids = meilleur_modele["Reseau"]
+        reseau.sommes = meilleur_modele["sommes"]
+        reseau.activation = meilleur_modele["activation"]
+        for i in range(nb_it):
+            picture = np.array(x_test[i]) / 255.0
+            picture_a = picture.reshape(len(x_test[i]), -1)
+            reseau.forward(picture_a)
+            prediction = reseau.activation[reseau.nb_couche - 1]
+            pred = np.argmax(prediction)
+            perte = 0.5 * np.sum((prediction - [1 if j == y_test[i]-1 else 0 for j in range(26)]) ** 2)
+            total_loss += perte
+            result = np.argmax([1 if j == y_test[i]-1 else 0 for j in range(26)])
+            if pred == result:
+                cpt += 1
+            rang += 1
+            evolution_precision = np.append(evolution_precision, cpt / rang)
+            evolution_perte_moyenne = np.append(evolution_perte_moyenne, total_loss / rang)
+        precision = cpt / nb_it
+
+        #### VISUALISATION ####
+        plt.figure(figsize=(15, 6))
+
+        x = range(1, len(evolution_precision) + 1)
+
+        plt.plot(x, evolution_precision, linewidth=1, alpha=0.7, color='blue', label='Précision')
+        plt.plot(x, evolution_perte_moyenne, linewidth=2, alpha=0.7, color='black', label='Perte moyenne')
+        plt.scatter(x, evolution_precision, s=2, alpha=0.3, color='red')
+
+        plt.title(f"Résultat des tests sur ({len(evolution_precision)} images)")
+        plt.xlabel("Image traitée")
+        plt.ylabel("Précision cumulée")
+        plt.ylim(0, 1)
+        plt.grid(True, alpha=0.3)
+        plt.legend()
+
+        plt.axhline(y=precision, color='green', linestyle='--', alpha=0.5,
+                    label=f'Précision finale: {precision:.4f}')
+        plt.legend()
+
+        plt.tight_layout()
+
+        print(
+            f'Précision finale du test : {precision}, Paramètres utilisés : learning rate de {taux_apprentissage}, nombre de neurones (par couche):{neurones_couche}')
 
 #### CODE SOURCE ####
 matheo = Traitement("mat.png")
@@ -158,5 +329,17 @@ lignes=matheo.selection_lignes(h, p2, 50)
 matheo.affiche_image(lignes[0])
 hc=matheo.histogrammes_colonnes(lignes[0])
 lettres=matheo.selection_colonnes(hc,lignes[0],20)
-for cle in lettres.keys():
-    matheo.affiche_image(lettres[cle])
+
+#Code pour charger les paramètres du réseau de neurone :
+
+with open("mon_modele_ocr.pkl", "rb") as fichier:
+    modele_charge = pickle.load(fichier)
+
+poids_entraines = modele_charge["Reseau"]
+
+nb_couche = modele_charge["nb_couche"]
+neurones_couche = modele_charge["neurones_couche"]
+taux_apprentissage = modele_charge["taux_apprentissage"]
+mon_reseau = Reseau2Neurone(nb_couche, neurones_couche, taux_apprentissage)
+mon_reseau.reseau_poids = poids_entraines
+###
