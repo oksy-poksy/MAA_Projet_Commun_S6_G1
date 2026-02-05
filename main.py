@@ -59,6 +59,12 @@ class Traitement :
             lettres[j] = image_binarisee[k:i].T #on transpose pour remettre l'image droite
         return lettres
 
+    def redimensionner_image(self,image,largeur,hauteur):
+        image=Image.fromarray(image)
+        image_redimensionnee=image.resize((largeur,hauteur))
+        image_redimensionnee=np.array(image_redimensionnee)
+        return image_redimensionnee
+
     def correction2pente(self): #inutile c'est carré dans l'axe PERSONNE
         pass
     def correction_inclinaison(self): #inutile c'est carré dans l'axe PERSONNE
