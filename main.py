@@ -1,18 +1,20 @@
 import numpy as np
 from PIL import Image
+
 class Traitement :
     def __init__(self, image):
         self.image = image
         self.result = ""
         self.list_image = None
 
-    def ouvrir_image(self): #FAUFAU
-        pass
-
     def decoupe_en_pixel(self): #avec numpy MATHEO
         img = Image.open(self.image)
         pixels = np.array(img)
         return pixels
+
+    def affiche_image(self, pixels):
+        img = Image.fromarray(pixels.astype('uint8'), 'RGB')
+        img.show()
 
     def binarisation(self, pixels): #mettre la valeur des pixels FAUSTINE
         seuil = np.mean(pixels)
