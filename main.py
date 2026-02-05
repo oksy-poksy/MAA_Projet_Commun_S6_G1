@@ -31,6 +31,7 @@ class Traitement :
         #le seuil désigne à partir de quel nombre de pixel on peut considérer que ça fait partie de la ligne
         #cela sert à ne pas prendre en compte les points "parasites"
         lignes={} #on met les lignes découpées dans un dico
+        nouvelles_lignes = {} #lignes corrigés
         i=0
         j=-1
         while i<len(histogramme): #on s'assure de bien regarder chaque ligne
@@ -39,23 +40,26 @@ class Traitement :
             j+=1 #on a détecté une nouvelle ligne à prendre en compte --> on met dans l'image
             k=i #on regarde le nombre de ligne de pixels qui composent cette ligne de texte
             #on va prendre les lignes de i à là où s'arrête la ligne
-            while i<len(histogramme) and histogramme[i]>=seuil:
+            deuxieme_seuil=seuil
+            while i<len(histogramme) and histogramme[i]>=deuxieme_seuil:
+                deuxieme_seuil=1 #permet de prendre en compte la barre du p par exemple --> les éléments fins
+            #qui font partie de la lettre. On pourra enlever cela si on le juge peu important
                 i+=1
             lignes[j]=image_binarisee[k:i]
-            hauteurs = []
-            for i in range(len(lignes)):
-                hauteurs.append(len(lignes[i]))
-            hauteurs = np.array(hauteurs)
-            hauteur_moyenne = np.mean(hauteurs)
-            nouvelles_lignes = {}
-            i = 0
-            while i < len(lignes)-1:
-                if len(lignes[i]) < hauteur_moyenne * 0.25:
-                    nouvelles_lignes[i] = np.vstack((lignes[i],lignes[i + 1]))
-                    i += 1
-                else:
-                    nouvelles_lignes[i] = lignes[i]
-                    i += 1
+
+        hauteurs = []
+        for i in range(len(lignes)):
+            hauteurs.append(len(lignes[i]))
+        hauteurs = np.array(hauteurs)
+        hauteur_moyenne = np.mean(hauteurs)
+        i = 0
+        while i < len(lignes)-1: #on recolle les points des i
+            if len(lignes[i]) < hauteur_moyenne * 0.5:
+                nouvelles_lignes[i] = np.vstack((lignes[i],lignes[i + 1]))
+                i += 2
+            else:
+                nouvelles_lignes[i] = lignes[i]
+                i += 1
         return nouvelles_lignes #(à ajouter --> exceptions --> par exemple lignes d'un seul pixel)
 
     def histogrammes_colonnes(self, ligne): #on fait de même, un histogramme, mais dans l'autre sens MAXIME
@@ -68,6 +72,8 @@ class Traitement :
         #les lignes mais avec les colonnes afin de détacher les lettres. Il faudra retransposer
         #pour avoir les images dans le bon sens
         lettres={}
+        espaces={}#on compare les espaces pour savoir s'il s'agit ou non seulement d'espace entre les lettres
+        #comme on saura les espaces on saura quels ensembles de lettres sont des mots
         i = 0
         j = -1
         while i < len(histogramme_colonnes):
@@ -148,4 +154,5 @@ matheo = Traitement("mat.png")
 p = matheo.decoupe_en_pixel()
 p2 = matheo.binarisation(p)
 h = matheo.histogramme(p2)
-print(matheo.selection_lignes(h, p2, 100))
+lignes=matheo.selection_lignes(h, p2, 50)
+matheo.affiche_image(lignes[0])
