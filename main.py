@@ -64,8 +64,22 @@ class Traitement :
     def correction_inclinaison(self): #inutile c'est carré dans l'axe PERSONNE
         pass
 class Reseau2Neurone :
-    def forward(self): #PIERRE
-        pass
+    def __init__(self, nb_couche, neurones_couche, taux_apprentissage):
+        self.activation = {}
+        self.nb_couche = nb_couche
+        self.neurones_couche = neurones_couche
+        self.taux_apprentissage = taux_apprentissage
+        for couche in range(1, self.nb_couche):
+            nb_de_colonnes = neurones_couche[couche - 1] + 1
+            nb_de_lignes = self.neurones_couche[couche]
+            self.reseau_poids[couche] = np.random.randn(nb_de_lignes,nb_de_colonnes) * 0.01
+
+    def forward(self, image): #PIERRE
+        self.activation[0] = image
+        for couche in range(1, self.nb_couche):
+            activation_avec_biais = np.append(self.activation[couche - 1], 1)
+            self.sommes[couche] = np.dot(self.reseau_poids[couche], activation_avec_biais)
+            self.activation[couche] = np.where(self.sommes[couche] > 0, self.sommes[couche], 0)
     def backward(self): # Oksana
         pass
 class Entrainement :
