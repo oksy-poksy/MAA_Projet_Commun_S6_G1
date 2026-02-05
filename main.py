@@ -46,7 +46,7 @@ class Traitement :
 
     def histogrammes_colonnes(self, ligne): #on fait de même, un histogramme, mais dans l'autre sens MAXIME
         liste_colonnes=ligne.T
-        image_numpy = np.where(liste_colonnes > 0, 1, 0)
+        image_numpy = np.where(liste_colonnes== 0, 1, 0)
         histogramme_colonnes = np.sum(image_numpy, axis=1)
         return histogramme_colonnes
 
