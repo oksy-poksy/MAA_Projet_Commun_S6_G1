@@ -69,8 +69,7 @@ class Traitement :
         return histogramme_colonnes
 
     def selection_colonnes(self, histogramme_colonnes, image_binarisee,seuil): #on fait de même que pour
-        #les lignes mais avec les colonnes afin de détacher les lettres. Il faudra retransposer
-        #pour avoir les images dans le bon sens
+        #les lignes mais avec les colonnes afin de détacher les lettres.
         lettres={}
         espaces={}#on compare les espaces pour savoir s'il s'agit ou non seulement d'espace entre les lettres
         #comme on saura les espaces on saura quels ensembles de lettres sont des mots
@@ -83,7 +82,8 @@ class Traitement :
             k = i
             while i < len(histogramme_colonnes) and histogramme_colonnes[i] >= seuil:
                 i += 1
-            lettres[j] = image_binarisee[k:i].T #on transpose pour remettre l'image droite
+            lettres[j] = image_binarisee[:,k:i] #on sélectionne les colonnes correspondantes,
+            # quelque soit la ligne
         return lettres
 
     def redimensionner_image(self,image,largeur,hauteur):
@@ -156,3 +156,6 @@ p2 = matheo.binarisation(p)
 h = matheo.histogramme(p2)
 lignes=matheo.selection_lignes(h, p2, 50)
 matheo.affiche_image(lignes[0])
+hc=matheo.histogramme(lignes[0])
+lettres=matheo.selection_colonnes(hc,p2,100)
+matheo.affiche_image(lettres[0])
