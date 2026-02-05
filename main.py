@@ -17,8 +17,9 @@ class Traitement :
         img.show()
 
     def binarisation(self, pixels): #mettre la valeur des pixels FAUSTINE
+        gris = np.mean(pixels, axis=2)
         seuil = np.mean(pixels)*0.75
-        image_binaire = np.where(pixels>seuil, 255, 0)
+        image_binaire = np.where(gris > seuil, 255, 0).astype('uint8')
         return image_binaire
 
     def histogramme(self,image_binarisee): #entree : image binarisée, sortie : "list numpy" ELANA
