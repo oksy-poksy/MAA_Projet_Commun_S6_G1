@@ -68,7 +68,7 @@ class Traitement :
         histogramme_colonnes = np.sum(image_numpy, axis=1)
         return histogramme_colonnes
 
-    def selection_colonnes(self, histogramme_colonnes, image_binarisee,seuil): #on fait de même que pour
+    def selection_colonnes(self, histogramme_colonnes, ligne,seuil): #on fait de même que pour
         #les lignes mais avec les colonnes afin de détacher les lettres.
         lettres={}
         espaces={}#on compare les espaces pour savoir s'il s'agit ou non seulement d'espace entre les lettres
@@ -82,7 +82,7 @@ class Traitement :
             k = i
             while i < len(histogramme_colonnes) and histogramme_colonnes[i] >= seuil:
                 i += 1
-            lettres[j] = image_binarisee[:,k:i] #on sélectionne les colonnes correspondantes,
+            lettres[j] = ligne[:,k:i] #on sélectionne les colonnes correspondantes,
             # quelque soit la ligne
         return lettres
 
@@ -156,6 +156,7 @@ p2 = matheo.binarisation(p)
 h = matheo.histogramme(p2)
 lignes=matheo.selection_lignes(h, p2, 50)
 matheo.affiche_image(lignes[0])
-hc=matheo.histogramme(lignes[0])
-lettres=matheo.selection_colonnes(hc,p2,100)
-matheo.affiche_image(lettres[0])
+hc=matheo.histogrammes_colonnes(lignes[0])
+lettres=matheo.selection_colonnes(hc,lignes[0],20)
+for cle in lettres.keys():
+    matheo.affiche_image(lettres[cle])
