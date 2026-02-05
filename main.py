@@ -5,12 +5,15 @@ class Traitement :
         self.image = image
         self.result = ""
         self.list_image = None
+
     def ouvrir_image(self): #FAUFAU
         pass
+
     def decoupe_en_pixel(self): #avec numpy MATHEO
         img = Image.open(self.image)
         pixels = np.array(img)
         return pixels
+
     def binarisation(self, pixels): #mettre la valeur des pixels FAUSTINE
         seuil = np.mean(pixels)
         image_binaire = np.where(pixels>seuil, 255, 0)
@@ -20,6 +23,7 @@ class Traitement :
         image_numpy = np.where(image_binarisee >0, 1,0)
         histogramme = np.sum(image_numpy, axis=1)
         return histogramme
+
     def selection_lignes(self,histogramme,image_binarisee,seuil): # MAXIME
         #le seuil désigne à partir de quel nombre de pixel on peut considérer que ça fait partie de la ligne
         #cela sert à ne pas prendre en compte les points "parasites"
@@ -67,14 +71,17 @@ class Traitement :
 
     def correction2pente(self): #inutile c'est carré dans l'axe PERSONNE
         pass
+
     def correction_inclinaison(self): #inutile c'est carré dans l'axe PERSONNE
         pass
+
 class Reseau2Neurone :
     def __init__(self, nb_couche, neurones_couche, taux_apprentissage):
         self.activation = {}
         self.nb_couche = nb_couche
         self.neurones_couche = neurones_couche
         self.taux_apprentissage = taux_apprentissage
+        self.somme = {}
         for couche in range(1, self.nb_couche):
             nb_de_colonnes = neurones_couche[couche - 1] + 1
             nb_de_lignes = self.neurones_couche[couche]
@@ -86,8 +93,12 @@ class Reseau2Neurone :
             activation_avec_biais = np.append(self.activation[couche - 1], 1)
             self.sommes[couche] = np.dot(self.reseau_poids[couche], activation_avec_biais)
             self.activation[couche] = np.where(self.sommes[couche] > 0, self.sommes[couche], 0)
-    def backward(self): # Oksana
+
+    def backward_propagation(self, label):
         pass
+
+
+    
 class Entrainement :
     pass
 
