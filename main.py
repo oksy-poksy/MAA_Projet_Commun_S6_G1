@@ -13,11 +13,11 @@ class Traitement :
         return pixels
 
     def affiche_image(self, pixels):
-        img = Image.fromarray(pixels.astype('uint8'), 'RGB')
+        img = Image.fromarray(pixels.astype('uint8'))
         img.show()
 
     def binarisation(self, pixels): #mettre la valeur des pixels FAUSTINE
-        seuil = np.mean(pixels)
+        seuil = np.mean(pixels)*0.75
         image_binaire = np.where(pixels>seuil, 255, 0)
         return image_binaire
 
@@ -127,7 +127,6 @@ class Reseau2Neurone :
     
 class Entrainement :
     pass
-
 
 #### CODE SOURCE ####
 matheo = Traitement("mat.png")
