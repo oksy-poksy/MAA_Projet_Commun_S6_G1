@@ -23,7 +23,7 @@ class Traitement :
         return image_binaire
 
     def histogramme(self,image_binarisee): #entree : image binarisée, sortie : "list numpy" ELANA
-        image_numpy = np.where(image_binarisee == 0, 1,0)
+        image_numpy = np.where(image_binarisee ==0, 1,0)
         histogramme = np.sum(image_numpy, axis=1)
         return histogramme
 
