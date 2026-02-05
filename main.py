@@ -130,6 +130,6 @@ class Entrainement :
 
 
 #### CODE SOURCE ####
-image = ""
-Reseau = Reseau2Neurone
-file = Traitement(image)
+matheo = Traitement("mat.png")
+p = matheo.binarisation(matheo.decoupe_en_pixel())
+matheo.affiche_image(p)
