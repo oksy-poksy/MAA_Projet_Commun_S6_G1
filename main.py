@@ -42,7 +42,21 @@ class Traitement :
             while i<len(histogramme) and histogramme[i]>=seuil:
                 i+=1
             lignes[j]=image_binarisee[k:i]
-        return lignes #(à ajouter --> exceptions --> par exemple lignes d'un seul pixel)
+        hauteurs=[]
+        for i in range(len(lignes)):
+            hauteurs.append(len(lignes[i]))
+        hauteurs=np.array(hauteurs)
+        hauteur_moyenne=np.mean(hauteurs)
+        nouvelles_lignes={}
+        i=0
+        while i < len(lignes):
+            if len(lignes[i]) <hauteur_moyenne*0.25:
+                nouvelles_lignes[i]=lignes[i]+lignes[i+1]
+                i+=1
+            else:
+                nouvelles_lignes[i]=lignes[i]
+                i+=1
+        return nouvelles_lignes #(à ajouter --> exceptions --> par exemple lignes d'un seul pixel)
 
     def histogrammes_colonnes(self, ligne): #on fait de même, un histogramme, mais dans l'autre sens MAXIME
         liste_colonnes=ligne.T
@@ -133,3 +147,9 @@ class Entrainement :
 matheo = Traitement("mat.png")
 p = matheo.binarisation(matheo.decoupe_en_pixel())
 matheo.affiche_image(p)
+
+a=np.array([[0,0]])
+b=np.array([[0,1]])
+c=np.concatenate((a,b),axis=0)
+c=c.tolist()
+print(c)
