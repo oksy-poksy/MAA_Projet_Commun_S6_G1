@@ -81,7 +81,8 @@ class Reseau2Neurone :
         self.nb_couche = nb_couche
         self.neurones_couche = neurones_couche
         self.taux_apprentissage = taux_apprentissage
-        self.somme = {}
+        self.sommes = {}
+        self.reseau_poids={}
         for couche in range(1, self.nb_couche):
             nb_de_colonnes = neurones_couche[couche - 1] + 1
             nb_de_lignes = self.neurones_couche[couche]
