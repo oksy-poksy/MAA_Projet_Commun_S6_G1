@@ -79,12 +79,19 @@ class Traitement :
 
 class Reseau2Neurone :
     def __init__(self, nb_couche, neurones_couche, taux_apprentissage):
-        self.activation = {}
+
         self.nb_couche = nb_couche
         self.neurones_couche = neurones_couche
         self.taux_apprentissage = taux_apprentissage
+
         self.sommes = {}
         self.reseau_poids={}
+        self.activation = {}
+
+        # Oksana
+        self.erreurs = {}
+        self.gradients = {}
+
         for couche in range(1, self.nb_couche):
             nb_de_colonnes = neurones_couche[couche - 1] + 1
             nb_de_lignes = self.neurones_couche[couche]
@@ -98,9 +105,25 @@ class Reseau2Neurone :
             self.activation[couche] = np.where(self.sommes[couche] > 0, self.sommes[couche], 0)
 
     def backward_propagation(self, label):
-        pass
+        vecteur_attendu = np.zeros(self.neurones_couche[-1])
+        vecteur_attendu[label] = 1
 
+        L = self.nb_couche
 
+        self.erreurs[L - 1] = self.activation[L - 1] - vecteur_attendu
+
+        # Propagation de l'erreur vers les couches cachées (en arrière)
+        for couche in range(L - 2, 0, -1):
+            poids_sans_biais = self.reseau_poids[couche + 1][:, :-1]
+            erreur_propagee = np.dot(poids_sans_biais.T, self.erreurs[couche + 1])
+            derivee_activation = np.where(self.sommes[couche] > 0, 1, 0)
+            self.erreurs[couche] = erreur_propagee * derivee_activation
+
+        # Mise à jour des poids (Descente de gradient)
+        for couche in range(L - 1, 0, -1):
+            activation_prec_avec_biais = np.append(self.activation[couche - 1], 1)
+            self.gradients[couche] = np.outer(self.erreurs[couche], activation_prec_avec_biais)
+            self.reseau_poids[couche] -= self.taux_apprentissage * self.gradients[couche]
     
 class Entrainement :
     pass
