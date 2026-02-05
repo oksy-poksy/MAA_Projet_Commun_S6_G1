@@ -69,11 +69,11 @@ class Reseau2Neurone :
         self.nb_couche = nb_couche
         self.neurones_couche = neurones_couche
         self.taux_apprentissage = taux_apprentissage
+        self.somme = {}
         for couche in range(1, self.nb_couche):
             nb_de_colonnes = neurones_couche[couche - 1] + 1
             nb_de_lignes = self.neurones_couche[couche]
             self.reseau_poids[couche] = np.random.randn(nb_de_lignes,nb_de_colonnes) * 0.01
-
     def forward(self, image): #PIERRE
         self.activation[0] = image
         for couche in range(1, self.nb_couche):
