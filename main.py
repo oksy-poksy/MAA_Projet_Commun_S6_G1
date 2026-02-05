@@ -1,10 +1,17 @@
+import numpy as np
+from PIL import Image
+
+
+
 class Traitement :
     def __init__(self, image):
         self.image = image
         self.result = ""
         self.list_image = None
     def decoupe_en_pixel(self): #avec numpy MATHEO
-        pass
+        img = Image.open(self.image)
+        pixels = np.array(img)
+        return pixels
     def binarisation(self, pixels): #mettre la valeur des pixels FAUSTINE
         pass
     def histogramme(self): #entree : image binarisée, sortie : "list numpy" ELANA
