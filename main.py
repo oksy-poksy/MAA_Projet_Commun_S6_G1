@@ -49,14 +49,14 @@ class Traitement :
             hauteur_moyenne = np.mean(hauteurs)
             nouvelles_lignes = {}
             i = 0
-            while i < len(lignes):
+            while i < len(lignes)-1:
                 if len(lignes[i]) < hauteur_moyenne * 0.25:
-                    nouvelles_lignes[i] = lignes[i] + lignes[i + 1]
+                    nouvelles_lignes[i] = np.vstack((lignes[i],lignes[i + 1]))
                     i += 1
                 else:
                     nouvelles_lignes[i] = lignes[i]
                     i += 1
-        return lignes #(à ajouter --> exceptions --> par exemple lignes d'un seul pixel)
+        return nouvelles_lignes #(à ajouter --> exceptions --> par exemple lignes d'un seul pixel)
 
     def histogrammes_colonnes(self, ligne): #on fait de même, un histogramme, mais dans l'autre sens MAXIME
         liste_colonnes=ligne.T
@@ -145,6 +145,7 @@ class Entrainement :
 
 #### CODE SOURCE ####
 matheo = Traitement("mat.png")
-p = matheo.binarisation(matheo.decoupe_en_pixel())
-print(matheo.histogramme(p))
-matheo.affiche_image(p)
+p = matheo.decoupe_en_pixel()
+p2 = matheo.binarisation(p)
+h = matheo.histogramme(p2)
+print(matheo.selection_lignes(h, p2, 100))
