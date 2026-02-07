@@ -74,35 +74,26 @@ class Traitement :
         lettres = []
         espaces = []
         blocs = []
-
         i = 0
         n = len(hist)
-
-        # --- 1. Découpage brut ---
         while i < n:
-            # espace
             if hist[i] < seuil:
                 start = i
                 while i < n and hist[i] < seuil:
                     i += 1
                 espaces.append((start, i))
                 blocs.append(("espace", ligne[:, start:i]))
-
-            # lettre
             else:
                 start = i
                 while i < n and hist[i] >= seuil:
                     i += 1
                 lettres.append((start, i))
                 blocs.append(("lettre", ligne[:, start:i]))
-
-        # --- 2. Filtrage des petits espaces ---
         largeurs_espaces = [esp[1] - esp[0] for esp in espaces]
         if len(largeurs_espaces) > 0:
             moyenne = np.mean(largeurs_espaces)
         else:
             moyenne = 0
-
         blocs_filtres = []
         for typ, img in blocs:
             if typ == "espace":
@@ -110,7 +101,6 @@ class Traitement :
                     blocs_filtres.append((typ, img))
             else:
                 blocs_filtres.append((typ, img))
-
         return blocs_filtres
 
     def redimensionner_image(self, image, largeur=28,hauteur=28):
