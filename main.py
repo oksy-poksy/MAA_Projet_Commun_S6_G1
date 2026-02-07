@@ -20,12 +20,12 @@ class Traitement :
 
     def binarisation(self, pixels): #mettre la valeur des pixels FAUSTINE
         gris = np.mean(pixels, axis=2)
-        seuil = np.mean(pixels)*0.75
-        image_binaire = np.where(gris > seuil, 255, 0).astype('uint8')
+        seuil = np.mean(pixels)*0.7
+        image_binaire = np.where(gris > seuil, 0, 255).astype('uint8')
         return image_binaire
 
     def histogramme(self,image_binarisee): #entree : image binarisée, sortie : "list numpy" ELANA
-        image_numpy = np.where(image_binarisee==0, 1,0)
+        image_numpy = np.where(image_binarisee==255, 1,0)
         histogramme = np.sum(image_numpy, axis=1)
         return histogramme
 
@@ -56,7 +56,7 @@ class Traitement :
         hauteur_moyenne = np.mean(hauteurs)
         i = 0
         while i < len(lignes)-1: #on recolle les points des i
-            if len(lignes[i]) < hauteur_moyenne * 0.5:
+            if len(lignes[i]) < hauteur_moyenne * 0.25:
                 nouvelles_lignes[i] = np.vstack((lignes[i],lignes[i + 1]))
                 i += 2
             else:
@@ -66,33 +66,77 @@ class Traitement :
 
     def histogrammes_colonnes(self, ligne): #on fait de même, un histogramme, mais dans l'autre sens MAXIME
         liste_colonnes=ligne.T
-        image_numpy = np.where(liste_colonnes== 0, 1, 0)
+        image_numpy = np.where(liste_colonnes== 255, 1, 0)
         histogramme_colonnes = np.sum(image_numpy, axis=1)
         return histogramme_colonnes
 
-    def selection_colonnes(self, histogramme_colonnes, ligne,seuil): #on fait de même que pour
-        #les lignes mais avec les colonnes afin de détacher les lettres.
-        lettres={}
-        espaces={}#on compare les espaces pour savoir s'il s'agit ou non seulement d'espace entre les lettres
-        #comme on saura les espaces on saura quels ensembles de lettres sont des mots
-        i = 0
-        j = -1
-        while i < len(histogramme_colonnes):
-            while i < len(histogramme_colonnes) and histogramme_colonnes[i] < seuil:
-                i += 1
-            j += 1
-            k = i
-            while i < len(histogramme_colonnes) and histogramme_colonnes[i] >= seuil:
-                i += 1
-            lettres[j] = ligne[:,k:i] #on sélectionne les colonnes correspondantes,
-            # quelque soit la ligne
-        return lettres
+    def selection_colonnes(self, hist, ligne, seuil):
+        lettres = []
+        espaces = []
+        blocs = []
 
-    def redimensionner_image(self,image,largeur,hauteur):
-        image=Image.fromarray(image)
-        image_redimensionnee=image.resize((largeur,hauteur))
-        image_redimensionnee=np.array(image_redimensionnee)
-        return image_redimensionnee
+        i = 0
+        n = len(hist)
+
+        # --- 1. Découpage brut ---
+        while i < n:
+            # espace
+            if hist[i] < seuil:
+                start = i
+                while i < n and hist[i] < seuil:
+                    i += 1
+                espaces.append((start, i))
+                blocs.append(("espace", ligne[:, start:i]))
+
+            # lettre
+            else:
+                start = i
+                while i < n and hist[i] >= seuil:
+                    i += 1
+                lettres.append((start, i))
+                blocs.append(("lettre", ligne[:, start:i]))
+
+        # --- 2. Filtrage des petits espaces ---
+        largeurs_espaces = [esp[1] - esp[0] for esp in espaces]
+        if len(largeurs_espaces) > 0:
+            moyenne = np.mean(largeurs_espaces)
+        else:
+            moyenne = 0
+
+        blocs_filtres = []
+        for typ, img in blocs:
+            if typ == "espace":
+                if img.shape[1] >= moyenne * 0.6:  # seuil plus souple
+                    blocs_filtres.append((typ, img))
+            else:
+                blocs_filtres.append((typ, img))
+
+        return blocs_filtres
+
+    def redimensionner_image(self, image, largeur=28,hauteur=28):
+
+        h, w = image.shape
+        pixels_blancs = np.where(image > 128)
+        if len(pixels_blancs[0]) == 0:
+            return np.zeros((largeur,hauteur))
+
+        haut, bas = pixels_blancs[0].min(), pixels_blancs[0].max()
+        gauche, droite = pixels_blancs[1].min(), pixels_blancs[1].max()
+        marge = 2
+        haut = max(0, haut - marge)
+        bas = min(h - 1, bas + marge)
+        gauche = max(0, gauche - marge)
+        droite = min(w - 1, droite + marge)
+        lettre_cadree = image[haut:bas + 1, gauche:droite + 1]
+        img_pil = Image.fromarray(lettre_cadree)
+        img_pil.thumbnail((largeur - 4, hauteur - 4)) #on redimensionne la taille , mais on met une marge
+        img_finale = Image.new('L', (largeur, hauteur), 0) #on crée une image 28*28 sur fond noir
+        x = (largeur - img_pil.width) // 2 #on centre la lettre
+        y = (hauteur - img_pil.height) // 2
+        img_finale.paste(img_pil, (x, y))
+
+        return np.array(img_finale)
+
 
     def correction2pente(self): #inutile c'est carré dans l'axe PERSONNE
         pass
@@ -218,7 +262,7 @@ class Entrainement :
             evolution_perte_moyenne = np.array([])
             rang = 0
             total_loss = 0
-            for i in range(nb_it):
+            for i in random.sample(range(nb_it),nb_it):
                 picture = np.array(x_train[i]) / 255.0
                 picture_a = picture.reshape(len(x_train[i]), -1)
                 reseau.forward(picture_a)
@@ -320,26 +364,66 @@ class Entrainement :
         print(
             f'Précision finale du test : {precision}, Paramètres utilisés : learning rate de {taux_apprentissage}, nombre de neurones (par couche):{neurones_couche}')
 
-#### CODE SOURCE ####
-matheo = Traitement("mat.png")
-p = matheo.decoupe_en_pixel()
-p2 = matheo.binarisation(p)
-h = matheo.histogramme(p2)
-lignes=matheo.selection_lignes(h, p2, 50)
-matheo.affiche_image(lignes[0])
-hc=matheo.histogrammes_colonnes(lignes[0])
-lettres=matheo.selection_colonnes(hc,lignes[0],20)
-
+#### Lecture d'une image :###
 #Code pour charger les paramètres du réseau de neurone :
 
-with open("mon_modele_ocr.pkl", "rb") as fichier:
-    modele_charge = pickle.load(fichier)
+with open("parametres.pkl", "rb") as fichier:
+    parametres_reseau = pickle.load(fichier)
 
-poids_entraines = modele_charge["Reseau"]
+def lire_image(image,seuil_ligne,seuil_colonne,parametres_reseau):
+    ##on met les bons paramètres au réseau de neurone
+    reseau=Reseau2Neurone(3,[784, 128, 26],0.01)
+    reseau.reseau_poids = parametres_reseau["Reseau"]
+    reseau.sommes = parametres_reseau["sommes"]
+    reseau.activation = parametres_reseau["activation"]
+    ##phase de prétraitement
+    traitement=Traitement(image)
+    p=traitement.decoupe_en_pixel()
+    p2=traitement.binarisation(p)
+    traitement.affiche_image(p2)
+    h=traitement.histogramme(p2)
+    ##sélection des lignes
+    lignes=traitement.selection_lignes(h,p2,seuil_ligne)
+    nb_lignes = len(lignes)
+    print("Nb lignes trouvées :", nb_lignes)
+    texte=""
+    alphabet= ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+                    'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+    ##selection lettres et espaces
+    for i in range(nb_lignes):
 
-nb_couche = modele_charge["nb_couche"]
-neurones_couche = modele_charge["neurones_couche"]
-taux_apprentissage = modele_charge["taux_apprentissage"]
-mon_reseau = Reseau2Neurone(nb_couche, neurones_couche, taux_apprentissage)
-mon_reseau.reseau_poids = poids_entraines
-###
+        hc=traitement.histogrammes_colonnes(lignes[i])
+        blocs = traitement.selection_colonnes(hc, lignes[i], seuil_colonne)
+
+        for typ, img in blocs:
+            if typ == "espace":
+                if img.shape[1]>6: #on ne compte les espaces que si l'image est assez large
+                    texte += " "
+            else:
+                caractere = traitement.redimensionner_image(img, 28, 28)
+                caractere = caractere.T
+                caractere = caractere.flatten()/255
+                reseau.forward(caractere)
+                prediction = reseau.activation[reseau.nb_couche - 1]
+                pred = np.argmax(prediction)
+                texte += alphabet[pred]
+
+    print(texte)
+
+lire_image("image4.png",50,1,parametres_reseau)
+
+
+
+#nb_essais=4
+#nb_couche=3
+#neurones_couche=[784, 128, 26]
+#taux_apprentissage=0.01
+#entrainement=Entrainement()
+#meilleur_modele=entrainement.entrainement_consecutif(nb_essais,nb_couche,neurones_couche,taux_apprentissage)
+#entrainement.test(nb_couche,neurones_couche,taux_apprentissage,meilleur_modele)
+
+#with open("parametres2.pkl", 'wb') as f:
+#    pickle.dump(meilleur_modele, f)
+#print("fichier créé")
+#plt.show()
+
