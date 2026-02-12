@@ -56,7 +56,7 @@ class Traitement :
         hauteur_moyenne = np.mean(hauteurs)
         i = 0
         while i < len(lignes)-1: #on recolle les points des i
-            if len(lignes[i]) < hauteur_moyenne * 0.25:
+            if len(lignes[i]) < hauteur_moyenne :
                 nouvelles_lignes[i] = np.vstack((lignes[i],lignes[i + 1]))
                 i += 2
             else:
@@ -97,7 +97,7 @@ class Traitement :
         blocs_filtres = []
         for typ, img in blocs:
             if typ == "espace":
-                if img.shape[1] >= moyenne * 0.6:  # seuil plus souple
+                if img.shape[1] >= moyenne * 0.9:  # seuil plus souple
                     blocs_filtres.append((typ, img))
             else:
                 blocs_filtres.append((typ, img))
@@ -387,7 +387,7 @@ def lire_image(image,seuil_ligne,seuil_colonne,parametres_reseau):
 
         for typ, img in blocs:
             if typ == "espace":
-                if img.shape[1]>6: #on ne compte les espaces que si l'image est assez large
+                if img.shape[1]>8: #on ne compte les espaces que si l'image est assez large
                     texte += " "
             else:
                 caractere = traitement.redimensionner_image(img, 28, 28)
@@ -400,8 +400,11 @@ def lire_image(image,seuil_ligne,seuil_colonne,parametres_reseau):
 
     print(texte)
 
-lire_image("image4.png",50,1,parametres_reseau)
-
+lire_image("Manuscrit_Oksana.png",10,1,parametres_reseau)
+##Choses à corriger : problème dans la détection d'espaces (ici entre le in et le the) et probleme confusion l, t et i
+#ce dernier est sûrement lié au fait que l'IA a été entraînée sur de l'écriture manuscrite
+#Le problème le plus grave qu'on rencontre est l'incapacité de notre algorithme à bien couper les lettres
+#lorsque c'est écrit en attaché
 
 
 #nb_essais=4
