@@ -2,6 +2,7 @@ import numpy as np
 from PIL import Image
 from ReadingEMNIST import *
 import pickle
+import scipy.ndimage as nd
 
 class Traitement :
     def __init__(self, image):
@@ -18,9 +19,12 @@ class Traitement :
         img = Image.fromarray(pixels.astype('uint8'))
         img.show()
 
-    def binarisation(self, pixels): #mettre la valeur des pixels FAUSTINE
+    def binarisation(self, pixels,type="moyenne"): #mettre la valeur des pixels FAUSTINE
         gris = np.mean(pixels, axis=2)
-        seuil = np.mean(pixels)*0.7
+        if type=="moyenne":
+            seuil = np.mean(pixels) * 0.8
+        elif type=="mediane":
+            seuil=np.median(pixels)*0.8
         image_binaire = np.where(gris > seuil, 0, 255).astype('uint8')
         return image_binaire
 
@@ -97,19 +101,20 @@ class Traitement :
         blocs_filtres = []
         for typ, img in blocs:
             if typ == "espace":
-                if img.shape[1] >= moyenne * 0.9:  # seuil plus souple
+                if img.shape[1] >= moyenne :  # seuil plus souple
                     blocs_filtres.append((typ, img))
             else:
                 blocs_filtres.append((typ, img))
         return blocs_filtres
 
-    def redimensionner_image(self, image, largeur=28,hauteur=28):
+    def redimensionner_image(self, image, largeur=28,hauteur=28,seuil=100):
 
         h, w = image.shape
         pixels_blancs = np.where(image > 128)
-        if len(pixels_blancs[0]) == 0:
+        if len(pixels_blancs[0]) ==0:
             return np.zeros((largeur,hauteur))
-
+        if len(pixels_blancs[1])<=seuil: #on supprime les lettres parasites restantes
+            return np.zeros((largeur,hauteur))
         haut, bas = pixels_blancs[0].min(), pixels_blancs[0].max()
         gauche, droite = pixels_blancs[1].min(), pixels_blancs[1].max()
         marge = 2
@@ -127,6 +132,11 @@ class Traitement :
 
         return np.array(img_finale)
 
+    def nettoyage_lettre(self,pixels): #on nettoie la lettre pour qu'elle soit plus facilement lue par le réseau
+        seuil = np.mean(pixels)
+        image_binaire = np.where(pixels > seuil, 255, 0).astype('uint8')
+        image_2=image_binaire.T
+        return image_2
 
     def correction2pente(self): #inutile c'est carré dans l'axe PERSONNE
         pass
@@ -297,7 +307,7 @@ class Entrainement :
                         label=f'Précision finale: {precision:.4f}')
             plt.legend()
             print(f"{j}eme simulation effectuée")
-            reseau.taux_apprentissage = reseau.taux_apprentissage / 2  # on diminue le taux d'apprentissage apr_s chaque itération
+            reseau.taux_apprentissage = reseau.taux_apprentissage*0.1  # on diminue le taux d'apprentissage apr_s chaque itération
         return meilleur_modele
     def test(self, nb_couche, neurones_couche, taux_apprentissage,meilleur_modele):
         # TEST
@@ -360,7 +370,7 @@ class Entrainement :
 with open("parametres.pkl", "rb") as fichier:
     parametres_reseau = pickle.load(fichier)
 
-def lire_image(image,seuil_ligne,seuil_colonne,parametres_reseau):
+def lire_image(image,seuil_ligne,seuil_colonne,parametres_reseau,type_binarisation="moyenne"):
     ##on met les bons paramètres au réseau de neurone
     reseau=Reseau2Neurone(3,[784, 128, 26],0.01)
     reseau.reseau_poids = parametres_reseau["Reseau"]
@@ -369,7 +379,10 @@ def lire_image(image,seuil_ligne,seuil_colonne,parametres_reseau):
     ##phase de prétraitement
     traitement=Traitement(image)
     p=traitement.decoupe_en_pixel()
-    p2=traitement.binarisation(p)
+    if type_binarisation == "moyenne":
+        p2=traitement.binarisation(p,type="moyenne")
+    else:
+        p2 = traitement.binarisation(p, type="mediane")
     traitement.affiche_image(p2)
     h=traitement.histogramme(p2)
     ##sélection des lignes
@@ -384,30 +397,35 @@ def lire_image(image,seuil_ligne,seuil_colonne,parametres_reseau):
 
         hc=traitement.histogrammes_colonnes(lignes[i])
         blocs = traitement.selection_colonnes(hc, lignes[i], seuil_colonne)
-
+        j=0
         for typ, img in blocs:
             if typ == "espace":
                 if img.shape[1]>8: #on ne compte les espaces que si l'image est assez large
                     texte += " "
             else:
                 caractere = traitement.redimensionner_image(img, 28, 28)
-                caractere = caractere.T
-                caractere = caractere.flatten()/255
-                reseau.forward(caractere)
-                prediction = reseau.activation[reseau.nb_couche - 1]
-                pred = np.argmax(prediction)
-                texte += alphabet[pred]
+                if np.all(caractere==0):
+                    texte += " "
+                else:
+                    caractere=traitement.nettoyage_lettre(caractere)
+                    if j<1:
+                        traitement.affiche_image(caractere)
+                    j+=1
+                    caractere=caractere.flatten() / 255
+                    reseau.forward(caractere)
+                    prediction = reseau.activation[reseau.nb_couche - 1]
+                    pred = np.argmax(prediction)
+                    texte += alphabet[pred]
 
     print(texte)
 
-lire_image("Manuscrit_Oksana.png",10,1,parametres_reseau)
-##Choses à corriger : problème dans la détection d'espaces (ici entre le in et le the) et probleme confusion l, t et i
-#ce dernier est sûrement lié au fait que l'IA a été entraînée sur de l'écriture manuscrite
-#Le problème le plus grave qu'on rencontre est l'incapacité de notre algorithme à bien couper les lettres
-#lorsque c'est écrit en attaché
+
+lire_image("Manuscrit_Oksana.png",10,1,parametres_reseau,type_binarisation="mediane")
+lire_image("20260221_122151.jpg",10,1,parametres_reseau,type_binarisation="moyenne")
+lire_image("20260221_123106.jpg",10,1,parametres_reseau,type_binarisation="moyenne")
 
 
-#nb_essais=4
+#nb_essais=5
 #nb_couche=3
 #neurones_couche=[784, 128, 26]
 #taux_apprentissage=0.01
@@ -415,8 +433,8 @@ lire_image("Manuscrit_Oksana.png",10,1,parametres_reseau)
 #meilleur_modele=entrainement.entrainement_consecutif(nb_essais,nb_couche,neurones_couche,taux_apprentissage)
 #entrainement.test(nb_couche,neurones_couche,taux_apprentissage,meilleur_modele)
 
-#with open("parametres2.pkl", 'wb') as f:
-#    pickle.dump(meilleur_modele, f)
+#with open("parametres.pkl", 'wb') as f:
+#   pickle.dump(meilleur_modele, f)
 #print("fichier créé")
 #plt.show()
 
