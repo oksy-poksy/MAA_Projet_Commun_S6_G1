@@ -162,7 +162,7 @@ class Reseau2Neurone :
         for couche in range(1, self.nb_couche):
             nb_de_colonnes = neurones_couche[couche - 1] + 1
             nb_de_lignes = self.neurones_couche[couche]
-            self.reseau_poids[couche] = np.random.randn(nb_de_lignes,nb_de_colonnes) * 0.01
+            self.reseau_poids[couche] = np.random.randn(nb_de_lignes,nb_de_colonnes) * np.sqrt(2/neurones_couche[0])
 
     def forward(self, image): #PIERRE
         self.activation[0] = image
@@ -367,12 +367,18 @@ class Entrainement :
 #### Lecture d'une image :###
 #Code pour charger les paramètres du réseau de neurone :
 
-with open("parametres.pkl", "rb") as fichier:
-    parametres_reseau = pickle.load(fichier)
 
-def lire_image(image,seuil_ligne,seuil_colonne,parametres_reseau,type_binarisation="moyenne",afficher_image=False):
+def lire_image(image,seuil_ligne,seuil_colonne,type_binarisation="moyenne",afficher_image=False,parametres=1):
     ##on met les bons paramètres au réseau de neurone
-    reseau=Reseau2Neurone(3,[784, 128, 26],0.01)
+    if parametres==1:
+        with open("parametres.pkl", "rb") as fichier:
+            parametres_reseau = pickle.load(fichier)
+        reseau=Reseau2Neurone(3,[784,128,26],0.01)
+    else:
+
+        with open("parametres5.pkl", "rb") as fichier:
+            parametres_reseau = pickle.load(fichier)
+        reseau=Reseau2Neurone(4,[784, 512,256, 26],0.01)
     reseau.reseau_poids = parametres_reseau["Reseau"]
     reseau.sommes = parametres_reseau["sommes"]
     reseau.activation = parametres_reseau["activation"]
@@ -383,7 +389,8 @@ def lire_image(image,seuil_ligne,seuil_colonne,parametres_reseau,type_binarisati
         p2=traitement.binarisation(p,type="moyenne")
     else:
         p2 = traitement.binarisation(p, type="mediane")
-    traitement.affiche_image(p2)
+    if afficher_image:
+        traitement.affiche_image(p2)
     h=traitement.histogramme(p2)
     ##sélection des lignes
     lignes=traitement.selection_lignes(h,p2,seuil_ligne)
@@ -408,7 +415,7 @@ def lire_image(image,seuil_ligne,seuil_colonne,parametres_reseau,type_binarisati
                     texte += " "
                 else:
                     caractere=traitement.nettoyage_lettre(caractere)
-                    if j<1 and afficher_image:
+                    if j<3 and afficher_image:
                         traitement.affiche_image(caractere)
                     j+=1
                     caractere=caractere.flatten() / 255
@@ -421,22 +428,24 @@ def lire_image(image,seuil_ligne,seuil_colonne,parametres_reseau,type_binarisati
     print(texte)
 
 
-lire_image("Manuscrit_Oksana.png",10,1,parametres_reseau,type_binarisation="mediane",afficher_image=True)
-lire_image("20260221_122151.jpg",10,1,parametres_reseau,type_binarisation="moyenne")
-lire_image("20260221_123106.jpg",10,1,parametres_reseau,type_binarisation="moyenne")
-lire_image("20260221_114816(1).jpg",10,1,parametres_reseau,type_binarisation="moyenne")
-lire_image("20260221_125156.jpg",10,1,parametres_reseau,type_binarisation="moyenne")
-lire_image("20260221_125832.jpg",10,1,parametres_reseau,type_binarisation="moyenne")
-#nb_essais=5
-#nb_couche=3
-#neurones_couche=[784, 128, 26]
+lire_image("Manuscrit_Oksana.png",10,1,type_binarisation="mediane",afficher_image=True)
+lire_image("20260221_122151.jpg",10,1,type_binarisation="moyenne")
+lire_image("20260221_123106.jpg",10,1,type_binarisation="moyenne")
+lire_image("20260221_114816(1).jpg",10,1,type_binarisation="moyenne")
+lire_image("20260221_125156.jpg",10,1,type_binarisation="moyenne")
+lire_image("20260221_125832.jpg",10,1,type_binarisation="moyenne")
+lire_image("20260221_131553.jpg",10,1,type_binarisation="mediane",afficher_image=True,parametres=2)
+
+#nb_essais=2
+#nb_couche=4
+#neurones_couche=[784, 512,256, 26]
 #taux_apprentissage=0.01
 #entrainement=Entrainement()
 #meilleur_modele=entrainement.entrainement_consecutif(nb_essais,nb_couche,neurones_couche,taux_apprentissage)
 #entrainement.test(nb_couche,neurones_couche,taux_apprentissage,meilleur_modele)
 
-#with open("parametres.pkl", 'wb') as f:
-#   pickle.dump(meilleur_modele, f)
+#with open("parametres5.pkl", 'wb') as f:
+#    pickle.dump(meilleur_modele, f)
 #print("fichier créé")
 #plt.show()
 
