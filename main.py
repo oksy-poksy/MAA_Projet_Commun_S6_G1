@@ -101,7 +101,7 @@ class Traitement :
         blocs_filtres = []
         for typ, img in blocs:
             if typ == "espace":
-                if img.shape[1] >= moyenne :  # seuil plus souple
+                if img.shape[1] >= moyenne :
                     blocs_filtres.append((typ, img))
             else:
                 blocs_filtres.append((typ, img))
@@ -370,7 +370,7 @@ class Entrainement :
 with open("parametres.pkl", "rb") as fichier:
     parametres_reseau = pickle.load(fichier)
 
-def lire_image(image,seuil_ligne,seuil_colonne,parametres_reseau,type_binarisation="moyenne"):
+def lire_image(image,seuil_ligne,seuil_colonne,parametres_reseau,type_binarisation="moyenne",afficher_image=False):
     ##on met les bons paramètres au réseau de neurone
     reseau=Reseau2Neurone(3,[784, 128, 26],0.01)
     reseau.reseau_poids = parametres_reseau["Reseau"]
@@ -408,7 +408,7 @@ def lire_image(image,seuil_ligne,seuil_colonne,parametres_reseau,type_binarisati
                     texte += " "
                 else:
                     caractere=traitement.nettoyage_lettre(caractere)
-                    if j<1:
+                    if j<1 and afficher_image:
                         traitement.affiche_image(caractere)
                     j+=1
                     caractere=caractere.flatten() / 255
@@ -416,15 +416,17 @@ def lire_image(image,seuil_ligne,seuil_colonne,parametres_reseau,type_binarisati
                     prediction = reseau.activation[reseau.nb_couche - 1]
                     pred = np.argmax(prediction)
                     texte += alphabet[pred]
+        texte += " "
 
     print(texte)
 
 
-lire_image("Manuscrit_Oksana.png",10,1,parametres_reseau,type_binarisation="mediane")
+lire_image("Manuscrit_Oksana.png",10,1,parametres_reseau,type_binarisation="mediane",afficher_image=True)
 lire_image("20260221_122151.jpg",10,1,parametres_reseau,type_binarisation="moyenne")
 lire_image("20260221_123106.jpg",10,1,parametres_reseau,type_binarisation="moyenne")
-
-
+lire_image("20260221_114816(1).jpg",10,1,parametres_reseau,type_binarisation="moyenne")
+lire_image("20260221_125156.jpg",10,1,parametres_reseau,type_binarisation="moyenne")
+lire_image("20260221_125832.jpg",10,1,parametres_reseau,type_binarisation="moyenne")
 #nb_essais=5
 #nb_couche=3
 #neurones_couche=[784, 128, 26]
